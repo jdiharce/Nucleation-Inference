@@ -1,0 +1,44 @@
+# LAMMPS script to compute energy of a given configuration
+
+variable        N               equal 2000
+variable        T               equal 0.66
+variable        duration        equal 40e7
+variable        save_period     equal 100
+
+variable        density         equal 0.95
+variable        L               equal ((${N})/${density})^(1.0/3.0)
+
+
+### Initial box
+units           lj
+dimension       3
+boundary        p p p
+region          box  block      0  ${L}   0 ${L} 0 ${L}
+
+
+pair_style      lj/cut 2.5              # Kobb Andersen
+pair_modify     shift yes
+neighbor        0.3 bin
+
+read_data /scratch/diharcej/LJ/data2.lmp
+
+# Read the initial configuration
+#read_dump       /scratch/diharcej/LJ/0.64_trj/last_trj/last_dump30120.lammpstrj MYCONF x y z vx vy vz
+
+
+reset_timestep  0
+
+group           lj type 1 2
+
+# Compute energy
+thermo_style custom step pe ke etotal
+thermo 1
+thermo_modify   line one 
+variable        PotEng equal pe
+
+
+fix   myOutput all print 1 "${PotEng}" file NAME screen no title "#! U"
+
+# Run a single timestep to compute energy
+rerun MYTRJ dump x y z vx vy vz
+unfix myOutput
