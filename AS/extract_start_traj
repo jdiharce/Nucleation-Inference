@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#directory to search for files
+directory="./AS_trj"
+mkdir "${directory}/start_trj"
+
+lines_to_extract=$((4009 * 1))
+
+# Loop through each file in the directory containing 'test' in its name
+for file in "$directory"/*; do
+    # Check if the file contains 'test' in its name and is a regular file
+    #echo $file
+    if [[ "$file" == *fwd* && -f "$file" ]]; then
+        # Extract the filename without the directory path
+        filename=$(basename "$file")
+	echo $filename
+        # Create the output filename by appending '_last100' to the original filename
+        output_file="$directory/start_trj/$filename"
+	
+        # Extract the last 100 lines and save them to the new file
+        head -n $lines_to_extract "$file" > "$output_file"
+    fi
+done

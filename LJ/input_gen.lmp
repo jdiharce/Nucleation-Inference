@@ -1,0 +1,60 @@
+variable        N              	equal 2000 
+variable        T	        equal 0.66
+variable        duration        equal 40e7
+variable        save_period     equal 100
+
+variable        density		equal 0.95
+variable        L         	equal ((${N})/${density})^(1.0/3.0) 
+
+variable        seed1           equal XXX
+variable        seed2           equal ${seed1}+1
+variable        seed3           equal ${seed1}+2
+
+
+
+### Initial box
+units           lj 
+dimension       3
+boundary        p p p
+region          box  block      0  ${L}   0 ${L} 0 ${L}
+create_box      2 box
+
+mass            1 1
+mass            2 1
+
+
+pair_style      lj/cut 2.5              # Kobb Andersen 
+pair_coeff      1 1 1.0 1.00 2.5
+pair_coeff      2 2 0.5 0.88 2.5
+pair_coeff      1 2 1.5 0.80 2.5
+pair_modify     shift yes
+neighbor        0.3 bin
+
+
+
+create_atoms    1 random ${N}  ${seed1} box
+create_atoms    2 random ${N}  ${seed2} box
+
+minimize        1.0e-4 1.0e-6 1000 10000
+
+#restart         5000000 restart.*       #save restart
+
+velocity        all create 1.2 ${seed3}
+timestep        0.005
+
+#fix             myplumed all  plumed plumedfile "plumed.dat"
+fix             mynpt all npt temp 1.2 ${T}  $(100.0*dt) iso 0 0 $(1000*dt)
+run            	20000
+variable        TotEng equal etotal
+
+reset_timestep	0
+thermo 		${save_period}
+
+dump            002 all custom ${save_period} ./${T}_trj/dump${seed1}.lammpstrj id type x y z vx vy vz 
+dump_modify     002 sort id
+
+fix             mynpt all npt temp ${T} ${T} $(100.0*dt) iso 0 0 $(1000*dt)
+fix             mynpt2 all halt 20000 v_TotEng < -6.6
+run	 	${duration}	
+#write_data      data2.lmp pair ij
+
