@@ -1,0 +1,25 @@
+#!/bin/bash
+directory="/scratch/diharcej/LJ/0.64_trj/last_trj"
+
+module purge
+module load plumed/2.9.0/gcc-openmpi
+
+cd $directory
+# Iterate over the list of files and directories
+for traj in "."/*; do
+    #echo $dir
+
+        
+        if [[ $traj = *trj* ]]; then
+            # Split the string with respect to '.' and take the first element
+            echo $traj
+            arrtraj=(${traj//./ })
+            echo $arrtraj
+            number=(${arrtraj//j/ })
+            echo ${number[-1]}
+            # Split the first part with respect to 'j' and take the last element
+            sed s/XXX/traj${number[-1]}_s.out/ ./plumed_full_cv_gen.dat > ./plumed_full_cv.dat
+            plumed driver --plumed ./plumed_full_cv.dat --mf_dcd $traj
+            break
+        fi
+done
