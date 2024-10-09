@@ -19,7 +19,7 @@ for number in "${random_numbers[@]}"
     do
 	echo ${number}
         sed s/XXX/${number}/ input_gen.lmp > input${number}.lmp
-	sed s/XXX/${number}/ lmptest_gen.sh > lmp${number}.sh
+	sed s/XXX/${number}/ lmp_gen.sh > lmp${number}.sh
         sbatch lmp${number}.sh
 	rm lmp${number}.sh
     done
